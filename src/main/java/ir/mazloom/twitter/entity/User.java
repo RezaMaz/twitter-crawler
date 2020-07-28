@@ -36,6 +36,12 @@ public class User {
     @Column(name = "D_CREATED_AT")
     private Date createdAt;
 
+    @Column(name = "B_SEED")
+    private Boolean seed;
+
+    @Column(name = "B_FINISH")
+    private Boolean finish;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "follower")
     private List<Relationship> followers;
 
