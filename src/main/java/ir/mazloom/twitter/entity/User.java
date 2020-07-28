@@ -42,6 +42,9 @@ public class User {
     @Column(name = "B_FINISH")
     private Boolean finish;
 
+    @Column(name = "B_CRAWLING")
+    private Boolean crawling;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "follower")
     private List<Relationship> followers;
 
