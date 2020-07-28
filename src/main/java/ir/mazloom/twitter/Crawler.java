@@ -12,6 +12,7 @@ import twitter4j.TwitterException;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityNotFoundException;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -24,21 +25,21 @@ public class Crawler {
 
     @PostConstruct
     void init() {
-        userRepository.findAllBySeedTrue().forEach(user -> {
+        userCrawler(userRepository.findAllBySeedTrueAAndCrawlingTrue());
+        userCrawler(userRepository.findAllBySeedTrueAAndCrawlingFalse());
+        userCrawler(userRepository.findAllBySeedFalseAAndCrawlingTrue());
+        userCrawler(userRepository.findAllBySeedFalseAAndCrawlingFalse());
+    }
+
+    private void userCrawler(List<User> userList) {
+        userList.forEach(user -> {
             try {
                 persistUser(user, twitter.getUserTimeline(user.getScreenName()).get(0).getUser());
+                user.setCrawling(true);
+
                 persistFollowers(user);
                 persistFollowings(user);
-                setFinishStatus(user);
-            } catch (TwitterException e) {
-                e.printStackTrace();
-            }
-        });
-        userRepository.findAllBySeedFalse().forEach(user -> {
-            try {
-                persistUser(user, twitter.getUserTimeline(user.getScreenName()).get(0).getUser());
-                persistFollowers(user);
-                persistFollowings(user);
+
                 setFinishStatus(user);
             } catch (TwitterException e) {
                 e.printStackTrace();
@@ -51,10 +52,13 @@ public class Crawler {
         User foundUser = byId.orElseThrow(EntityNotFoundException::new);
 
         if (relationshipRepository.findAllByFollowingId(user.getId()).size() == foundUser.getFollowersCount() &&
-                relationshipRepository.findAllByFollowerId(user.getId()).size() == foundUser.getFriendsCount())
+                relationshipRepository.findAllByFollowerId(user.getId()).size() == foundUser.getFriendsCount()) {
+            user.setCrawling(false);
             user.setFinish(true);
-        else
+        } else {
+            user.setCrawling(true);
             user.setFinish(false);
+        }
     }
 
     private void persistUser(User user, twitter4j.User twitterUser) {

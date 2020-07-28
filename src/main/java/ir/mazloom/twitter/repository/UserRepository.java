@@ -7,8 +7,12 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    List<User> findAllBySeedTrue();
+    List<User> findAllBySeedTrueAAndCrawlingTrue();
 
-    List<User> findAllBySeedFalse();
+    List<User> findAllBySeedTrueAAndCrawlingFalse();
+
+    List<User> findAllBySeedFalseAAndCrawlingTrue();
+
+    List<User> findAllBySeedFalseAAndCrawlingFalse();
 
 }
