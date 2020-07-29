@@ -90,7 +90,7 @@ public class Crawler {
     }
 
     private void persistUser(User user, twitter4j.User twitterUser) {
-        if (user.getFriendsCount() != null) //this user is existed in database with fake id
+        if (user.getFriendsCount() == null) //this user is existed in database with fake id
             userRepository.deleteById(user.getId());
         user.setBiography(twitterUser.getDescription());
         user.setCreatedAt(twitterUser.getCreatedAt());
