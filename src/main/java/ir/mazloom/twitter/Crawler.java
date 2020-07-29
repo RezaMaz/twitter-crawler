@@ -34,26 +34,25 @@ public class Crawler {
     }
 
     private User fetchUserFromDatabase() {
-        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAAndCrawlingTrue();
+        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrue();
         if (allBySeedTrueAAndCrawlingTrue.size() > 0)
             return allBySeedTrueAAndCrawlingTrue.get(0);
         else {
-            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAAndCrawlingFalse();
+            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalse();
             if (allBySeedTrueAAndCrawlingFalse.size() > 0)
                 return allBySeedTrueAAndCrawlingFalse.get(0);
-            else {
-                List<User> allBySeedFalseAAndCrawlingTrue = userRepository.findAllBySeedFalseAAndCrawlingTrue();
+            /*else {
+                List<User> allBySeedFalseAAndCrawlingTrue = userRepository.findAllBySeedFalseAndCrawlingTrue();
                 if (allBySeedFalseAAndCrawlingTrue.size() > 0)
                     return allBySeedFalseAAndCrawlingTrue.get(0);
                 else {
-                    List<User> allBySeedFalseAAndCrawlingFalse = userRepository.findAllBySeedFalseAAndCrawlingFalse();
+                    List<User> allBySeedFalseAAndCrawlingFalse = userRepository.findAllBySeedFalseAndCrawlingFalse();
                     if (allBySeedFalseAAndCrawlingFalse.size() > 0)
                         return allBySeedFalseAAndCrawlingFalse.get(0);
-                    else
-                        return null;
                 }
-            }
+            }*/
         }
+        return null;
     }
 
     private void userCrawler(User user) {
@@ -85,6 +84,8 @@ public class Crawler {
     }
 
     private void persistUser(User user, twitter4j.User twitterUser) {
+        if (user.getId() != null) //this user is seed and exist in database with fake id
+            userRepository.deleteById(user.getId());
         user.setBiography(twitterUser.getDescription());
         user.setCreatedAt(twitterUser.getCreatedAt());
         user.setFollowersCount(twitterUser.getFollowersCount());
