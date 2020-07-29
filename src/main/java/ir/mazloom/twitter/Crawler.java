@@ -5,6 +5,7 @@ import ir.mazloom.twitter.entity.User;
 import ir.mazloom.twitter.repository.RelationshipRepository;
 import ir.mazloom.twitter.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import twitter4j.PagableResponseList;
 import twitter4j.Twitter;
@@ -15,6 +16,7 @@ import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Configuration
 public class Crawler {
@@ -57,6 +59,8 @@ public class Crawler {
 
     private void userCrawler(User user) {
         try {
+            log.info("start crawling user: " + user.getScreenName());
+
             persistUser(user, twitter.getUserTimeline(user.getScreenName()).get(0).getUser());
             user.setCrawling(true);
 
@@ -64,6 +68,8 @@ public class Crawler {
             persistFollowings(user);
 
             setFinishStatus(user);
+
+            log.info("finish crawling user: " + user.getScreenName());
         } catch (TwitterException e) {
             e.printStackTrace();
         }
@@ -99,6 +105,9 @@ public class Crawler {
         long cursor = user.getCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), cursor);
+
+            waitBetweenRequest();
+
             followerList.forEach(follower -> {
                 persistUser(new User(), follower);
 
@@ -114,6 +123,9 @@ public class Crawler {
                 userRepository.saveAndFlush(user);
             } else
                 break;
+
+            log.info("followersCount: " + user.getFollowersCount());
+            log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()));
         }
     }
 
@@ -121,6 +133,9 @@ public class Crawler {
         long cursor = user.getCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), cursor);
+
+            waitBetweenRequest();
+
             followingList.forEach(following -> {
                 persistUser(new User(), following);
 
@@ -136,6 +151,18 @@ public class Crawler {
                 userRepository.saveAndFlush(user);
             } else
                 break;
+
+            log.info("followingCount: " + user.getFriendsCount());
+            log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()));
+        }
+    }
+
+    // 15 Requests / 15-min window
+    void waitBetweenRequest() {
+        try {
+            Thread.sleep(65 * 1000); //65 seconds
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
