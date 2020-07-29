@@ -25,26 +25,49 @@ public class Crawler {
 
     @PostConstruct
     void init() {
-        userCrawler(userRepository.findAllBySeedTrueAAndCrawlingTrue());
-        userCrawler(userRepository.findAllBySeedTrueAAndCrawlingFalse());
-        userCrawler(userRepository.findAllBySeedFalseAAndCrawlingTrue());
-        userCrawler(userRepository.findAllBySeedFalseAAndCrawlingFalse());
+        while (true) {
+            User user = fetchUserFromDatabase();
+            if (user == null)
+                break;
+            userCrawler(user);
+        }
     }
 
-    private void userCrawler(List<User> userList) {
-        userList.forEach(user -> {
-            try {
-                persistUser(user, twitter.getUserTimeline(user.getScreenName()).get(0).getUser());
-                user.setCrawling(true);
-
-                persistFollowers(user);
-                persistFollowings(user);
-
-                setFinishStatus(user);
-            } catch (TwitterException e) {
-                e.printStackTrace();
+    private User fetchUserFromDatabase() {
+        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAAndCrawlingTrue();
+        if (allBySeedTrueAAndCrawlingTrue.size() > 0)
+            return allBySeedTrueAAndCrawlingTrue.get(0);
+        else {
+            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAAndCrawlingFalse();
+            if (allBySeedTrueAAndCrawlingFalse.size() > 0)
+                return allBySeedTrueAAndCrawlingFalse.get(0);
+            else {
+                List<User> allBySeedFalseAAndCrawlingTrue = userRepository.findAllBySeedFalseAAndCrawlingTrue();
+                if (allBySeedFalseAAndCrawlingTrue.size() > 0)
+                    return allBySeedFalseAAndCrawlingTrue.get(0);
+                else {
+                    List<User> allBySeedFalseAAndCrawlingFalse = userRepository.findAllBySeedFalseAAndCrawlingFalse();
+                    if (allBySeedFalseAAndCrawlingFalse.size() > 0)
+                        return allBySeedFalseAAndCrawlingFalse.get(0);
+                    else
+                        return null;
+                }
             }
-        });
+        }
+    }
+
+    private void userCrawler(User user) {
+        try {
+            persistUser(user, twitter.getUserTimeline(user.getScreenName()).get(0).getUser());
+            user.setCrawling(true);
+
+            persistFollowers(user);
+            persistFollowings(user);
+
+            setFinishStatus(user);
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setFinishStatus(User user) {
@@ -72,7 +95,7 @@ public class Crawler {
     }
 
     private void persistFollowers(User user) throws TwitterException {
-        long cursor = -1L;
+        long cursor = user.getCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), cursor);
             followerList.forEach(follower -> {
@@ -83,15 +106,18 @@ public class Crawler {
                 relationship.setFollowingId(user.getId());
                 relationshipRepository.saveAndFlush(relationship);
             });
-            cursor = followerList.getNextCursor();
-            if (!followerList.hasNext()) {
+
+            if (followerList.hasNext()) {
+                cursor = followerList.getNextCursor();
+                user.setCursor(cursor);
+                userRepository.saveAndFlush(user);
+            } else
                 break;
-            }
         }
     }
 
     private void persistFollowings(User user) throws TwitterException {
-        long cursor = -1L;
+        long cursor = user.getCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), cursor);
             followingList.forEach(following -> {
@@ -102,11 +128,13 @@ public class Crawler {
                 relationship.setFollowingId(following.getId());
                 relationshipRepository.saveAndFlush(relationship);
             });
-            cursor = followingList.getNextCursor();
-            if (!followingList.hasNext()) {
+
+            if (followingList.hasNext()) {
+                cursor = followingList.getNextCursor();
+                user.setCursor(cursor);
+                userRepository.saveAndFlush(user);
+            } else
                 break;
-            }
         }
     }
-
 }
