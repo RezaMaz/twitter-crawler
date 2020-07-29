@@ -1,0 +1,46 @@
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet author="Reza Mazloom" id="1596031635019-1">
+        <createSequence sequenceName="hibernate_sequence"/>
+    </changeSet>
+    <changeSet author="Reza Mazloom" id="1596031635019-2">
+        <createTable tableName="RELATIONSHIP">
+            <column autoIncrement="true" name="ID" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="RELATIONSHIPPK"/>
+            </column>
+            <column name="F_FOLLOWER_ID" type="BIGINT"/>
+            <column name="F_FOLLOWING_ID" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Reza Mazloom" id="1596031635019-3">
+        <createTable tableName="TBL_USER">
+            <column name="ID" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="TBL_USERPK"/>
+            </column>
+            <column name="C_BIOGRAPHY" type="VARCHAR(255)"/>
+            <column name="B_CRAWLING" type="BOOLEAN"/>
+            <column name="D_CREATED_AT" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="N_CURSOR" type="BIGINT"/>
+            <column name="B_FINISH" type="BOOLEAN"/>
+            <column name="N_FOLLOWERS_COUNT" type="INTEGER"/>
+            <column name="N_FRIENDS_COUNT" type="INTEGER"/>
+            <column name="C_SCREEN_NAME" type="VARCHAR(255)"/>
+            <column name="B_SEED" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Reza Mazloom" id="1596031635019-4">
+        <addForeignKeyConstraint baseColumnNames="F_FOLLOWER_ID" baseTableName="RELATIONSHIP"
+                                 constraintName="FOLLOWER2USER" deferrable="false" initiallyDeferred="false"
+                                 referencedColumnNames="ID" referencedTableName="TBL_USER"/>
+    </changeSet>
+    <changeSet author="Reza Mazloom" id="1596031635019-5">
+        <addForeignKeyConstraint baseColumnNames="F_FOLLOWING_ID" baseTableName="RELATIONSHIP"
+                                 constraintName="FOLLOWING2USER" deferrable="false" initiallyDeferred="false"
+                                 referencedColumnNames="ID" referencedTableName="TBL_USER"/>
+    </changeSet>
+
+</databaseChangeLog>
