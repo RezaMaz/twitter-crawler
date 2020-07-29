@@ -106,8 +106,6 @@ public class Crawler {
         while (true) {
             PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), cursor);
 
-            waitBetweenRequest();
-
             followerList.forEach(follower -> {
                 persistUser(new User(), follower);
 
@@ -125,7 +123,9 @@ public class Crawler {
                 break;
 
             log.info("followersCount: " + user.getFollowersCount());
-            log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()));
+            log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()).size());
+
+            waitBetweenRequest();
         }
     }
 
@@ -133,8 +133,6 @@ public class Crawler {
         long cursor = user.getCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), cursor);
-
-            waitBetweenRequest();
 
             followingList.forEach(following -> {
                 persistUser(new User(), following);
@@ -153,7 +151,9 @@ public class Crawler {
                 break;
 
             log.info("followingCount: " + user.getFriendsCount());
-            log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()));
+            log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()).size());
+
+            waitBetweenRequest();
         }
     }
 
