@@ -42,5 +42,8 @@
                                  constraintName="FOLLOWING2USER" deferrable="false" initiallyDeferred="false"
                                  referencedColumnNames="ID" referencedTableName="TBL_USER"/>
     </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-6">
+        <addUniqueConstraint columnNames="C_SCREEN_NAME" constraintName="UC_TBL_USERC_SCREEN_NAME_COL" tableName="TBL_USER"/>
+    </changeSet>
 
 </databaseChangeLog>

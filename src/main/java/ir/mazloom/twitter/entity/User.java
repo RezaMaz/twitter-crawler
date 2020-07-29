@@ -21,7 +21,7 @@ public class User {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "C_SCREEN_NAME")
+    @Column(name = "C_SCREEN_NAME", unique = true)
     private String screenName;
 
     @Column(name = "C_BIOGRAPHY")
