@@ -57,21 +57,26 @@ public class Crawler {
         return null;
     }
 
-    private void userCrawler(User user) {
+    private void userCrawler(User debUser) {
         try {
-            log.info("start crawling user: " + user.getScreenName());
+            log.info("start crawling user: " + debUser.getScreenName());
 
-            persistUser(user, twitter.getUserTimeline(user.getScreenName()).get(0).getUser());
-            user.setCrawling(true);
+            User updatedUser = persistUser(twitter.getUserTimeline(debUser.getScreenName()).get(0).getUser());
+            updatedUser.setCrawling(true);
 
-            persistFollowers(user);
-            persistFollowings(user);
+            persistFollowers(updatedUser);
+            persistFollowings(updatedUser);
 
-            setFinishStatus(user);
+            setFinishStatus(updatedUser);
 
-            log.info("finish crawling user: " + user.getScreenName());
+            log.info("finish crawling user: " + updatedUser.getScreenName());
         } catch (TwitterException e) {
-            e.printStackTrace();
+            try {
+                log.error("TwitterException please wait(in seconds): " + e.getRateLimitStatus().getSecondsUntilReset());
+                Thread.sleep(e.getRateLimitStatus().getSecondsUntilReset() * 1000);
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+            }
         }
     }
 
@@ -89,16 +94,24 @@ public class Crawler {
         }
     }
 
-    private void persistUser(User user, twitter4j.User twitterUser) {
-        if (user.getId() != null && user.getFriendsCount() == null) //this user is existed in database with fake id
-            userRepository.deleteById(user.getId());
+    private User persistUser(twitter4j.User twitterUser) {
+        User user;
+        if (userRepository.existsById(twitterUser.getId())) {
+            user = userRepository.findById(twitterUser.getId()).get();
+        } else {
+            user = new User();
+            user.setSeed(false);
+            user.setFinish(false);
+            user.setCrawling(false);
+            user.setCursor(-1L);
+        }
         user.setBiography(twitterUser.getDescription());
         user.setCreatedAt(twitterUser.getCreatedAt());
         user.setFollowersCount(twitterUser.getFollowersCount());
         user.setFriendsCount(twitterUser.getFriendsCount());
         user.setId(twitterUser.getId());
         user.setScreenName(twitterUser.getScreenName());
-        userRepository.saveAndFlush(user);
+        return userRepository.saveAndFlush(user);
     }
 
     private void persistFollowers(User user) throws TwitterException {
@@ -107,7 +120,7 @@ public class Crawler {
             PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), cursor);
 
             followerList.forEach(follower -> {
-                persistUser(new User(), follower);
+                persistUser(follower);
 
                 Relationship relationship = new Relationship();
                 relationship.setFollowerId(follower.getId());
@@ -119,8 +132,10 @@ public class Crawler {
                 cursor = followerList.getNextCursor();
                 user.setCursor(cursor);
                 userRepository.saveAndFlush(user);
-            } else
+            } else {
+                user.setCursor(-1L);
                 break;
+            }
 
             log.info("followersCount: " + user.getFollowersCount());
             log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()).size());
@@ -135,7 +150,7 @@ public class Crawler {
             PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), cursor);
 
             followingList.forEach(following -> {
-                persistUser(new User(), following);
+                persistUser(following);
 
                 Relationship relationship = new Relationship();
                 relationship.setFollowerId(user.getId());
@@ -147,8 +162,10 @@ public class Crawler {
                 cursor = followingList.getNextCursor();
                 user.setCursor(cursor);
                 userRepository.saveAndFlush(user);
-            } else
+            } else {
+                user.setCursor(-1L);
                 break;
+            }
 
             log.info("followingCount: " + user.getFriendsCount());
             log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()).size());

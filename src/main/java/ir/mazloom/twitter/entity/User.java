@@ -37,16 +37,16 @@ public class User {
     private Date createdAt;
 
     @Column(name = "B_SEED")
-    private Boolean seed = false;
+    private Boolean seed;
 
     @Column(name = "B_FINISH")
-    private Boolean finish = false;
+    private Boolean finish;
 
     @Column(name = "B_CRAWLING")
-    private Boolean crawling = false;
+    private Boolean crawling;
 
     @Column(name = "N_CURSOR")
-    private Long cursor = -1L;
+    private Long cursor;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "follower")
     private List<Relationship> followers;
