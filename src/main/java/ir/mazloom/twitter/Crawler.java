@@ -89,7 +89,8 @@ public class Crawler {
             user.setSeed(false);
             user.setFinish(false);
             user.setCrawling(false);
-            user.setCursor(-1L);
+            user.setFollowerCursor(-1L);
+            user.setFollowingCursor(-1L);
         }
         user.setBiography(twitterUser.getDescription());
         user.setCreatedAt(twitterUser.getCreatedAt());
@@ -101,7 +102,7 @@ public class Crawler {
     }
 
     private void persistFollowers(User user) throws TwitterException {
-        long cursor = user.getCursor();
+        long cursor = user.getFollowerCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), cursor);
 
@@ -115,13 +116,10 @@ public class Crawler {
             });
 
             if (followerList.hasNext()) {
-                cursor = followerList.getNextCursor();
-                user.setCursor(cursor);
+                user.setFollowerCursor(followerList.getNextCursor());
                 userRepository.saveAndFlush(user);
-            } else {
-                user.setCursor(-1L);
+            } else
                 break;
-            }
 
             log.info("followersCount: " + user.getFollowersCount());
             log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()).size());
@@ -131,7 +129,7 @@ public class Crawler {
     }
 
     private void persistFollowings(User user) throws TwitterException {
-        long cursor = user.getCursor();
+        long cursor = user.getFollowingCursor();
         while (true) {
             PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), cursor);
 
@@ -145,13 +143,10 @@ public class Crawler {
             });
 
             if (followingList.hasNext()) {
-                cursor = followingList.getNextCursor();
-                user.setCursor(cursor);
+                user.setFollowingCursor(followingList.getNextCursor());
                 userRepository.saveAndFlush(user);
-            } else {
-                user.setCursor(-1L);
+            } else
                 break;
-            }
 
             log.info("followingCount: " + user.getFriendsCount());
             log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()).size());

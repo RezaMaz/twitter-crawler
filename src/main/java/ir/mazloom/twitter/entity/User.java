@@ -45,8 +45,11 @@ public class User {
     @Column(name = "B_CRAWLING")
     private Boolean crawling;
 
-    @Column(name = "N_CURSOR")
-    private Long cursor;
+    @Column(name = "N_FOLLOWER_CURSOR")
+    private Long followerCursor;
+
+    @Column(name = "N_FOLLOWING_CURSOR")
+    private Long followingCursor;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "follower")
     private List<Relationship> followers;

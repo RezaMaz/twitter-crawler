@@ -43,7 +43,21 @@
                                  referencedColumnNames="ID" referencedTableName="TBL_USER"/>
     </changeSet>
     <changeSet author="Mazloom (generated)" id="1596031635019-6">
-        <addUniqueConstraint columnNames="C_SCREEN_NAME" constraintName="UC_TBL_USERC_SCREEN_NAME_COL" tableName="TBL_USER"/>
+        <addUniqueConstraint columnNames="C_SCREEN_NAME" constraintName="UC_TBL_USERC_SCREEN_NAME_COL"
+                             tableName="TBL_USER"/>
+    </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-7">
+        <addColumn tableName="TBL_USER">
+            <column name="N_FOLLOWER_CURSOR" type="int8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-8">
+        <addColumn tableName="TBL_USER">
+            <column name="N_FOLLOWING_CURSOR" type="int8"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-9">
+        <dropColumn columnName="n_cursor" tableName="tbl_user"/>
     </changeSet>
 
 </databaseChangeLog>
