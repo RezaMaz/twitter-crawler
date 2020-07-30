@@ -12,9 +12,7 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,19 +34,19 @@ public class Crawler {
     }
 
     private User fetchUserFromDatabase() {
-        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrue();
+        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalse();
         if (allBySeedTrueAAndCrawlingTrue.size() > 0)
             return allBySeedTrueAAndCrawlingTrue.get(0);
         else {
-            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalse();
+            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalse();
             if (allBySeedTrueAAndCrawlingFalse.size() > 0)
                 return allBySeedTrueAAndCrawlingFalse.get(0);
             /*else {
-                List<User> allBySeedFalseAAndCrawlingTrue = userRepository.findAllBySeedFalseAndCrawlingTrue();
+                List<User> allBySeedFalseAAndCrawlingTrue = userRepository.findAllBySeedFalseAndCrawlingTrueAndFinishFalse();
                 if (allBySeedFalseAAndCrawlingTrue.size() > 0)
                     return allBySeedFalseAAndCrawlingTrue.get(0);
                 else {
-                    List<User> allBySeedFalseAAndCrawlingFalse = userRepository.findAllBySeedFalseAndCrawlingFalse();
+                    List<User> allBySeedFalseAAndCrawlingFalse = userRepository.findAllBySeedFalseAndCrawlingFalseAndFinishFalse();
                     if (allBySeedFalseAAndCrawlingFalse.size() > 0)
                         return allBySeedFalseAAndCrawlingFalse.get(0);
                 }
@@ -67,7 +65,9 @@ public class Crawler {
             persistFollowers(updatedUser);
             persistFollowings(updatedUser);
 
-            setFinishStatus(updatedUser);
+            updatedUser.setCrawling(false);
+            updatedUser.setFinish(true);
+            userRepository.saveAndFlush(updatedUser);
 
             log.info("finish crawling user: " + updatedUser.getScreenName());
         } catch (TwitterException e) {
@@ -77,20 +77,6 @@ public class Crawler {
             } catch (InterruptedException interruptedException) {
                 interruptedException.printStackTrace();
             }
-        }
-    }
-
-    private void setFinishStatus(User user) {
-        Optional<User> byId = userRepository.findById(user.getId());
-        User foundUser = byId.orElseThrow(EntityNotFoundException::new);
-
-        if (relationshipRepository.findAllByFollowingId(user.getId()).size() == foundUser.getFollowersCount() &&
-                relationshipRepository.findAllByFollowerId(user.getId()).size() == foundUser.getFriendsCount()) {
-            user.setCrawling(false);
-            user.setFinish(true);
-        } else {
-            user.setCrawling(true);
-            user.setFinish(false);
         }
     }
 
