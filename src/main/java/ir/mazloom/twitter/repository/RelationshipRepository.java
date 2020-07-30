@@ -11,4 +11,6 @@ public interface RelationshipRepository extends JpaRepository<Relationship, Long
 
     List<Relationship> findAllByFollowerId(Long id); //getFollowings
 
+    Boolean existsRelationshipByFollowerIdAndFollowingId(Long followerId, Long followingId);
+
 }

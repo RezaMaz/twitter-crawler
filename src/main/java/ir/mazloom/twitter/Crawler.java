@@ -102,9 +102,8 @@ public class Crawler {
     }
 
     private void persistFollowers(User user) throws TwitterException {
-        long cursor = user.getFollowerCursor();
         while (true) {
-            PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), cursor);
+            PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), user.getFollowerCursor());
 
             followerList.forEach(follower -> {
                 persistUser(follower);
@@ -112,7 +111,8 @@ public class Crawler {
                 Relationship relationship = new Relationship();
                 relationship.setFollowerId(follower.getId());
                 relationship.setFollowingId(user.getId());
-                relationshipRepository.saveAndFlush(relationship);
+                if (!relationshipRepository.existsRelationshipByFollowerIdAndFollowingId(follower.getId(), user.getId()))
+                    relationshipRepository.saveAndFlush(relationship);
             });
 
             if (followerList.hasNext()) {
@@ -129,9 +129,8 @@ public class Crawler {
     }
 
     private void persistFollowings(User user) throws TwitterException {
-        long cursor = user.getFollowingCursor();
         while (true) {
-            PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), cursor);
+            PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), user.getFollowingCursor());
 
             followingList.forEach(following -> {
                 persistUser(following);
@@ -139,7 +138,8 @@ public class Crawler {
                 Relationship relationship = new Relationship();
                 relationship.setFollowerId(user.getId());
                 relationship.setFollowingId(following.getId());
-                relationshipRepository.saveAndFlush(relationship);
+                if (!relationshipRepository.existsRelationshipByFollowerIdAndFollowingId(user.getId(), following.getId()))
+                    relationshipRepository.saveAndFlush(relationship);
             });
 
             if (followingList.hasNext()) {
