@@ -15,4 +15,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllBySeedFalseAndCrawlingFalseAndFinishFalse();
 
+    List<User> findAllBySeedTrueAndCrawlingTrueAndTweetFinishFalse();
+
+    List<User> findAllBySeedTrueAndCrawlingFalseAndTweetFinishFalse();
+
+    List<User> findAllBySeedFalseAndCrawlingTrueAndTweetFinishFalse();
+
+    List<User> findAllBySeedFalseAndCrawlingFalseAndTweetFinishFalse();
+
 }

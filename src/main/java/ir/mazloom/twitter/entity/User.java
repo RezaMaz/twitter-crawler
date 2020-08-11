@@ -42,6 +42,12 @@ public class User {
     @Column(name = "B_FINISH")
     private Boolean finish;
 
+    @Column(name = "B_TWEET_FINISH")
+    private Boolean tweetFinish;
+
+    @Column(name = "N_PAGE")
+    private Integer page;
+
     @Column(name = "B_CRAWLING")
     private Boolean crawling;
 

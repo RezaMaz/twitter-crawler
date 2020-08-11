@@ -60,4 +60,41 @@
         <dropColumn columnName="n_cursor" tableName="tbl_user"/>
     </changeSet>
 
+    <changeSet author="Mazloom (generated)" id="1596031635019-10">
+        <createTable tableName="TBL_TWEET">
+            <column name="ID" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="TBL_TWEETPK"/>
+            </column>
+            <column name="D_CREATED_AT" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="N_FAVORITE_COUNT" type="INTEGER"/>
+            <column name="C_IN_REPLY_TO_SCREEN_NAME" type="VARCHAR(255)"/>
+            <column name="N_IN_REPLY_TO_STATUS_ID" type="BIGINT"/>
+            <column name="N_IN_REPLY_TO_USER_ID" type="BIGINT"/>
+            <column name="B_IS_FAVORITED" type="BOOLEAN"/>
+            <column name="B_IS_RETWEETED" type="BOOLEAN"/>
+            <column name="B_IS_TRUNCATED" type="BOOLEAN"/>
+            <column name="C_LANG" type="VARCHAR(255)"/>
+            <column name="N_RETWEET_COUNT" type="INTEGER"/>
+            <column name="C_TEXT" type="TEXT"/>
+            <column name="F_USER_ID" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-11">
+        <addColumn tableName="TBL_USER">
+            <column name="B_TWEET_FINISH" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-12">
+        <addColumn tableName="TBL_USER">
+            <column name="N_PAGE" type="int4"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Mazloom (generated)" id="1596031635019-13">
+        <addForeignKeyConstraint baseColumnNames="F_USER_ID" baseTableName="TBL_TWEET" constraintName="TWEET2USER"
+                                 deferrable="false" initiallyDeferred="false" referencedColumnNames="ID"
+                                 referencedTableName="TBL_USER"/>
+    </changeSet>
+
 </databaseChangeLog>
