@@ -97,4 +97,10 @@
                                  referencedTableName="TBL_USER"/>
     </changeSet>
 
+    <changeSet author="Mazloom (generated)" id="1596031635019-14">
+        <addColumn tableName="TBL_USER">
+            <column name="C_NAME" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

@@ -24,6 +24,9 @@ public class User {
     @Column(name = "C_SCREEN_NAME", unique = true)
     private String screenName;
 
+    @Column(name = "C_NAME")
+    private String name;
+
     @Column(name = "C_BIOGRAPHY")
     private String biography;
 
