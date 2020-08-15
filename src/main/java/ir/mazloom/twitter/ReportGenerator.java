@@ -7,6 +7,7 @@ import ir.mazloom.twitter.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.springframework.stereotype.Component;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -18,6 +19,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Component
 public class ReportGenerator {
 
     private final UserRepository userRepository;

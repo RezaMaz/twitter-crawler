@@ -23,4 +23,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllBySeedFalseAndCrawlingFalseAndTweetFinishFalse();
 
+    List<User> findAllBySeedTrue();
+
 }
