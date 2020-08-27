@@ -2,6 +2,7 @@ package ir.mazloom.twitter;
 
 import ir.mazloom.twitter.entity.Relationship;
 import ir.mazloom.twitter.entity.Tweet;
+import ir.mazloom.twitter.entity.TwitterUser;
 import ir.mazloom.twitter.entity.User;
 import ir.mazloom.twitter.repository.RelationshipRepository;
 import ir.mazloom.twitter.repository.TweetRepository;
@@ -12,7 +13,12 @@ import org.springframework.context.annotation.Configuration;
 import twitter4j.*;
 
 import javax.annotation.PostConstruct;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,12 +35,12 @@ public class Crawler {
         while (true) {
             User user = null;
             try {
-                //            User user = fetchUserFromDatabase();
-                user = fetchUserFromDatabaseForCrawlingTweet();
+                user = fetchUserFromDatabase();
+//                user = fetchUserFromDatabaseForCrawlingTweet();
                 if (user == null)
                     break;
-//            relationCrawler(user);
-                tweetCrawler(user);
+                relationCrawler(user);
+//                tweetCrawler(user);
             } catch (TwitterException e) {
                 if (e.getErrorMessage() != null && e.getErrorMessage().equals("Rate limit exceeded")) {
                     log.error("TwitterException please wait(in seconds): " + e.getRateLimitStatus().getSecondsUntilReset());
@@ -44,7 +50,8 @@ public class Crawler {
                         interruptedException.printStackTrace();
                     }
                 } else {
-                    user.setTweetFinish(true);
+                    user.setFinish(true);
+//                    user.setTweetFinish(true);
                     userRepository.saveAndFlush(user);
                 }
             }
@@ -52,11 +59,11 @@ public class Crawler {
     }
 
     private User fetchUserFromDatabase() {
-        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalse();
+        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByFollowersCountAsc();
         if (allBySeedTrueAAndCrawlingTrue.size() > 0)
             return allBySeedTrueAAndCrawlingTrue.get(0);
         else {
-            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalse();
+            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByFollowersCountAsc();
             if (allBySeedTrueAAndCrawlingFalse.size() > 0)
                 return allBySeedTrueAAndCrawlingFalse.get(0);
             /*else {
@@ -98,12 +105,12 @@ public class Crawler {
     private void relationCrawler(User dbUser) throws TwitterException {
         log.info("start crawling user: " + dbUser.getScreenName());
 
-        User updatedUser = persistUser(twitter.getUserTimeline(dbUser.getScreenName()).get(0).getUser());
+        User updatedUser = persistUser(twitter.showUser(dbUser.getScreenName()));
         updatedUser.setCrawling(true);
         userRepository.saveAndFlush(updatedUser);
 
-        persistFollowers(updatedUser);
-        persistFollowings(updatedUser);
+        persistTwintFollowers(updatedUser);
+        persistTwintFollowings(updatedUser);
 
         updatedUser.setCrawling(false);
         updatedUser.setFinish(true);
@@ -238,6 +245,39 @@ public class Crawler {
         }
     }
 
+    private void persistTwintFollowers(User user) {
+        List<twitter4j.User> followerList = getTwintRelation(user.getScreenName(), "follower");
+        followerList.forEach(follower -> {
+            persistUser(follower);
+
+            Relationship relationship = new Relationship();
+            relationship.setFollowerId(follower.getId());
+            relationship.setFollowingId(user.getId());
+            if (!relationshipRepository.existsRelationshipByFollowerIdAndFollowingId(follower.getId(), user.getId()))
+                relationshipRepository.saveAndFlush(relationship);
+        });
+
+        log.info("followersCount: " + user.getFollowersCount());
+        log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()).size());
+    }
+
+    private void persistTwintFollowings(User user) {
+        List<twitter4j.User> followingList = getTwintRelation(user.getScreenName(), "following");
+
+        followingList.forEach(following -> {
+            persistUser(following);
+
+            Relationship relationship = new Relationship();
+            relationship.setFollowerId(user.getId());
+            relationship.setFollowingId(following.getId());
+            if (!relationshipRepository.existsRelationshipByFollowerIdAndFollowingId(user.getId(), following.getId()))
+                relationshipRepository.saveAndFlush(relationship);
+        });
+
+        log.info("followingCount: " + user.getFriendsCount());
+        log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()).size());
+    }
+
     // 15 Requests / 15-min window
     void waitBetweenRequest() {
         try {
@@ -245,5 +285,57 @@ public class Crawler {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private List<twitter4j.User> getTwintRelation(String username, String relation) {
+        ProcessBuilder builder = new ProcessBuilder(
+                "cmd.exe", "/c", "twint -u " + username + " --" + relation);
+        builder.redirectErrorStream(true);
+        Process p = null;
+        try {
+            p = builder.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String screenName;
+        List<twitter4j.User> users = new ArrayList<>();
+        while (true) {
+            try {
+                screenName = r.readLine();
+                if (screenName == null) {
+                    break;
+                }
+                if (screenName.contains("CRITICAL:root:twint"))
+                    continue;
+                try {
+                    Optional<User> byScreenName = userRepository.findByScreenName(screenName);
+                    if (byScreenName.isPresent()) {
+                        TwitterUser twitterUser = new TwitterUser();
+                        twitterUser.setId(byScreenName.get().getId());
+                        twitterUser.setBiography(byScreenName.get().getBiography());
+                        twitterUser.setCreatedAt(byScreenName.get().getCreatedAt());
+                        twitterUser.setFollowersCount(byScreenName.get().getFollowersCount());
+                        twitterUser.setFriendsCount(byScreenName.get().getFriendsCount());
+                        twitterUser.setName(byScreenName.get().getName());
+                        twitterUser.setScreenName(byScreenName.get().getScreenName());
+                        users.add(twitterUser);
+                    } else {
+                        twitter4j.User user = twitter.showUser(screenName);
+                        users.add(user);
+                    }
+                } catch (TwitterException e) {
+                    log.error("TwitterException please wait(in seconds): " + e.getRateLimitStatus().getSecondsUntilReset());
+                    try {
+                        Thread.sleep(e.getRateLimitStatus().getSecondsUntilReset() * 1000);
+                    } catch (InterruptedException interruptedException) {
+                        interruptedException.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return users;
     }
 }
