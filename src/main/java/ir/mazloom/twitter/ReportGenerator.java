@@ -36,7 +36,7 @@ public class ReportGenerator {
                             user.getFriendsCount() + "\n" +
                             user.getScreenName() + "\n" +
                             user.getCreatedAt() + "\n" +
-                            user.getBiography().replaceAll("\n", " ").replaceAll("\r", " ") + "\n"
+                            (user.getBiography() == null ? "\n" : user.getBiography().replaceAll("\n", " ").replaceAll("\r", " ") + "\n")
                     , Charsets.UTF_8, true);
         }
     }
