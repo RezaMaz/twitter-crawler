@@ -167,6 +167,7 @@ public class Crawler {
             userRepository.saveAndFlush(dbUser);
 
             log.info("finish crawling page:" + page);
+
         } while (userTimeline.size() > 0);
     }
 
@@ -184,8 +185,16 @@ public class Crawler {
         }
         user.setBiography(twitterUser.getDescription());
         user.setCreatedAt(twitterUser.getCreatedAt());
-        user.setFollowersCount(twitterUser.getFollowersCount());
-        user.setFriendsCount(twitterUser.getFriendsCount());
+        try {
+            user.setFollowersCount(twitterUser.getFollowersCount());
+        } catch (NullPointerException e) {
+            user.setFollowersCount(0);
+        }
+        try {
+            user.setFriendsCount(twitterUser.getFriendsCount());
+        } catch (NullPointerException e) {
+            user.setFriendsCount(0);
+        }
         user.setId(twitterUser.getId());
         user.setScreenName(twitterUser.getScreenName());
         return userRepository.saveAndFlush(user);
