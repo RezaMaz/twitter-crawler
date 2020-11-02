@@ -255,7 +255,7 @@ public class Crawler {
     }
 
     private void persistTwintFollowers(User user) {
-        List<twitter4j.User> followerList = getTwintRelation(user.getScreenName(), "follower");
+        List<twitter4j.User> followerList = getTwintRelation(user.getScreenName(), "followers");
         followerList.forEach(follower -> {
             persistUser(follower);
 
@@ -268,6 +268,8 @@ public class Crawler {
 
         log.info("followersCount: " + user.getFollowersCount());
         log.info("followerCount until now: " + relationshipRepository.findAllByFollowingId(user.getId()).size());
+        if (relationshipRepository.findAllByFollowingId(user.getId()).size() == 0)
+            System.out.println("followerCount not gathered: " + user.getId());
     }
 
     private void persistTwintFollowings(User user) {
@@ -285,6 +287,8 @@ public class Crawler {
 
         log.info("followingCount: " + user.getFriendsCount());
         log.info("followingCount until now: " + relationshipRepository.findAllByFollowerId(user.getId()).size());
+        if (relationshipRepository.findAllByFollowerId(user.getId()).size() == 0)
+            System.out.println("followingCount not gathered: " + user.getId());
     }
 
     // 15 Requests / 15-min window
