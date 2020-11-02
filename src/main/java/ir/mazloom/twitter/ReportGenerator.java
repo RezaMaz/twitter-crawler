@@ -8,9 +8,13 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class ReportGenerator {
 
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
+    private final Twitter twitter;
 
     void twitterUserReport() throws IOException {
         File file = new File("twitter_user.txt");
@@ -49,6 +54,14 @@ public class ReportGenerator {
                             tweet.getInReplyToUserId() + "\n" +
                             tweet.getText().replaceAll("\n", " ").replaceAll("\r", " ") + "\n"
                     , Charsets.UTF_8, true);
+        }
+    }
+
+    void downloadImage(Long userId) throws TwitterException, IOException, InterruptedException {
+        try (InputStream in = new URL(twitter.showUser(userId).getProfileImageURL().replace("_normal", "")).openStream()) {
+            File file = new File("C:\\download\\" + userId + ".png");
+            FileUtils.copyInputStreamToFile(in, file);
+            Thread.sleep(1000);
         }
     }
 
