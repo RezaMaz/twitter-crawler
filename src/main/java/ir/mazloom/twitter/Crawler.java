@@ -103,24 +103,24 @@ public class Crawler {
     }
 
     private void relationCrawler(User dbUser) throws TwitterException {
-        log.info("start crawling user: " + dbUser.getScreenName());
+        log.info("start crawling user: " + dbUser.getId());
 
-        User updatedUser = persistUser(twitter.showUser(dbUser.getScreenName()));
+        User updatedUser = persistUser(twitter.showUser(dbUser.getId()));
         updatedUser.setCrawling(true);
         userRepository.saveAndFlush(updatedUser);
 
-        persistTwintFollowers(updatedUser);
+//        persistTwintFollowers(updatedUser);
         persistTwintFollowings(updatedUser);
 
         updatedUser.setCrawling(false);
         updatedUser.setFinish(true);
         userRepository.saveAndFlush(updatedUser);
 
-        log.info("finish crawling user: " + updatedUser.getScreenName());
+        log.info("finish crawling user: " + updatedUser.getId());
     }
 
     private void tweetCrawler(User dbUser) throws TwitterException {
-        log.info("start crawling user: " + dbUser.getScreenName());
+        log.info("start crawling user: " + dbUser.getId());
 
         dbUser.setCrawling(true);
         userRepository.saveAndFlush(dbUser);
@@ -131,7 +131,7 @@ public class Crawler {
         dbUser.setTweetFinish(true);
         userRepository.saveAndFlush(dbUser);
 
-        log.info("finish crawling user: " + dbUser.getScreenName());
+        log.info("finish crawling user: " + dbUser.getId());
     }
 
     private void persistTweets(User dbUser) throws TwitterException {
