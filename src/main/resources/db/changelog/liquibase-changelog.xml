@@ -103,4 +103,10 @@
         </addColumn>
     </changeSet>
 
+    <changeSet author="Mazloom (generated)" id="1605222173463-4">
+        <addColumn tableName="TBL_USER">
+            <column name="N_RELATIONS_COUNT" type="int4"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

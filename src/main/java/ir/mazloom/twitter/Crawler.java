@@ -30,7 +30,7 @@ public class Crawler {
     private final TweetRepository tweetRepository;
     private final RelationshipRepository relationshipRepository;
 
-    @PostConstruct
+        @PostConstruct
     void init() {
         while (true) {
             User user = null;
@@ -59,11 +59,11 @@ public class Crawler {
     }
 
     private User fetchUserFromDatabase() {
-        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByFollowersCountAsc();
+        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByRelationCountAsc();
         if (allBySeedTrueAAndCrawlingTrue.size() > 0)
             return allBySeedTrueAAndCrawlingTrue.get(0);
         else {
-            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByFollowersCountAsc();
+            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByRelationCountAsc();
             if (allBySeedTrueAAndCrawlingFalse.size() > 0)
                 return allBySeedTrueAAndCrawlingFalse.get(0);
             /*else {

@@ -8,9 +8,9 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    List<User> findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByFollowersCountAsc();
+    List<User> findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByRelationCountAsc();
 
-    List<User> findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByFollowersCountAsc();
+    List<User> findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByRelationCountAsc();
 
     List<User> findAllBySeedFalseAndCrawlingTrueAndFinishFalse();
 

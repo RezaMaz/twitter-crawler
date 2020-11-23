@@ -36,6 +36,9 @@ public class User {
     @Column(name = "N_FRIENDS_COUNT")
     private Integer friendsCount;
 
+    @Column(name = "N_RELATIONS_COUNT")
+    private Integer relationCount;
+
     @Column(name = "D_CREATED_AT")
     private Date createdAt;
 
