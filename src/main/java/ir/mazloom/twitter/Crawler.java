@@ -30,7 +30,7 @@ public class Crawler {
     private final TweetRepository tweetRepository;
     private final RelationshipRepository relationshipRepository;
 
-        @PostConstruct
+    @PostConstruct
     void init() {
         while (true) {
             User user = null;
