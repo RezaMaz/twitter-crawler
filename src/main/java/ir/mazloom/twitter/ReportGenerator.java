@@ -38,6 +38,7 @@ public class ReportGenerator {
                             (user.getBiography() == null ? "\n" : user.getBiography().replaceAll("\n", " ").replaceAll("\r", " ") + "\n")
                     , Charsets.UTF_8, true);
         }
+        System.out.println("twitter user report finished.");
     }
 
     void twitterTweetReport() throws IOException {
@@ -55,6 +56,7 @@ public class ReportGenerator {
                             tweet.getText().replaceAll("\n", " ").replaceAll("\r", " ") + "\n"
                     , Charsets.UTF_8, true);
         }
+        System.out.println("twitter tweet report finished.");
     }
 
     void downloadImage(Long userId) throws TwitterException, IOException, InterruptedException {
