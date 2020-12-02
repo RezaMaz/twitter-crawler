@@ -35,12 +35,12 @@ public class Crawler {
         while (true) {
             User user = null;
             try {
-                user = fetchUserFromDatabase();
-//                user = fetchUserFromDatabaseForCrawlingTweet();
+//                user = fetchUserFromDatabase();
+                user = fetchUserFromDatabaseForCrawlingTweet();
                 if (user == null)
                     break;
-                relationCrawler(user);
-//                tweetCrawler(user);
+//                relationCrawler(user);
+                tweetCrawler(user);
             } catch (TwitterException e) {
                 if (e.getErrorMessage() != null && e.getErrorMessage().equals("Rate limit exceeded")) {
                     log.error("TwitterException please wait(in seconds): " + e.getRateLimitStatus().getSecondsUntilReset());
@@ -50,8 +50,8 @@ public class Crawler {
                         interruptedException.printStackTrace();
                     }
                 } else {
-                    user.setFinish(true);
-//                    user.setTweetFinish(true);
+//                    user.setFinish(true);
+                    user.setTweetFinish(true);
                     userRepository.saveAndFlush(user);
                 }
             }
