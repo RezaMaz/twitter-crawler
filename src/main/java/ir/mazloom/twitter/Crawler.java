@@ -25,7 +25,7 @@ import java.util.Optional;
 @Configuration
 public class Crawler {
 
-    private final Twitter twitter;
+    private final List<Twitter> twitterAPIs;
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
     private final RelationshipRepository relationshipRepository;
@@ -56,6 +56,17 @@ public class Crawler {
                 }
             }
         }
+    }
+
+    private Twitter getFreeTwitterApi() {
+        for (int i = 0; i < twitterAPIs.size(); i++) {
+            try {
+                twitterAPIs.get(i).showUser("jzarif");
+                return twitterAPIs.get(i);
+            } catch (TwitterException ignored) {
+            }
+        }
+        return twitterAPIs.get(0);
     }
 
     private User fetchUserFromDatabase() {
@@ -105,7 +116,7 @@ public class Crawler {
     private void relationCrawler(User dbUser) throws TwitterException {
         log.info("start crawling user: " + dbUser.getId());
 
-        User updatedUser = persistUser(twitter.showUser(dbUser.getId()));
+        User updatedUser = persistUser(getFreeTwitterApi().showUser(dbUser.getId()));
         updatedUser.setCrawling(true);
         userRepository.saveAndFlush(updatedUser);
 
@@ -145,7 +156,7 @@ public class Crawler {
 
             log.info("start crawling page:" + page);
 
-            userTimeline = twitter.getUserTimeline(dbUser.getScreenName(), paging);
+            userTimeline = getFreeTwitterApi().getUserTimeline(dbUser.getScreenName(), paging);
             userTimeline.forEach(q -> {
                 Tweet tweet = new Tweet();
                 tweet.setId(q.getId());
@@ -202,7 +213,7 @@ public class Crawler {
 
     private void persistFollowers(User user) throws TwitterException {
         while (true) {
-            PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), user.getFollowerCursor());
+            PagableResponseList<twitter4j.User> followerList = getFreeTwitterApi().getFollowersList(user.getScreenName(), user.getFollowerCursor());
 
             followerList.forEach(follower -> {
                 persistUser(follower);
@@ -229,7 +240,7 @@ public class Crawler {
 
     private void persistFollowings(User user) throws TwitterException {
         while (true) {
-            PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), user.getFollowingCursor());
+            PagableResponseList<twitter4j.User> followingList = getFreeTwitterApi().getFriendsList(user.getScreenName(), user.getFollowingCursor());
 
             followingList.forEach(following -> {
                 persistUser(following);
@@ -334,7 +345,7 @@ public class Crawler {
                         twitterUser.setScreenName(byScreenName.get().getScreenName());
                         users.add(twitterUser);
                     } else {
-                        twitter4j.User user = twitter.showUser(screenName);
+                        twitter4j.User user = getFreeTwitterApi().showUser(screenName);
                         users.add(user);
                     }
                 } catch (TwitterException e) {
