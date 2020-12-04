@@ -8,6 +8,9 @@ import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @SpringBootApplication
 public class TwitterApplication {
 
@@ -19,14 +22,20 @@ public class TwitterApplication {
     }
 
     @Bean
-    Twitter createTwitter() {
-        ConfigurationBuilder cb = new ConfigurationBuilder();
-        cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(twitterApiProperties.getConsumerKey())
-                .setOAuthConsumerSecret(twitterApiProperties.getConsumerSecret())
-                .setOAuthAccessToken(twitterApiProperties.getAccessToken())
-                .setOAuthAccessTokenSecret(twitterApiProperties.getTokenSecret());
-        TwitterFactory tf = new TwitterFactory(cb.build());
-        return tf.getInstance();
+    List<Twitter> createTwitterAPIs() {
+        List<Twitter> twitters = new ArrayList<>();
+
+        for (int i = 0; i < twitterApiProperties.getConsumerKey().size(); i++) {
+            ConfigurationBuilder cb = new ConfigurationBuilder();
+            cb.setDebugEnabled(true)
+                    .setOAuthConsumerKey(twitterApiProperties.getConsumerKey().get(i))
+                    .setOAuthConsumerSecret(twitterApiProperties.getConsumerSecret().get(i))
+                    .setOAuthAccessToken(twitterApiProperties.getAccessToken().get(i))
+                    .setOAuthAccessTokenSecret(twitterApiProperties.getTokenSecret().get(i));
+            TwitterFactory tf = new TwitterFactory(cb.build());
+            twitters.add(tf.getInstance());
+        }
+
+        return twitters;
     }
 }
