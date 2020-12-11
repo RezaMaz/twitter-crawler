@@ -23,7 +23,7 @@ public class ReportGenerator {
 
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
-    private final Twitter twitter;
+    private final List<Twitter> twitterAPIs;
 
     void twitterUserReport() throws IOException {
         File file = new File("twitter_user.txt");
@@ -60,7 +60,7 @@ public class ReportGenerator {
     }
 
     void downloadImage(Long userId) throws TwitterException, IOException, InterruptedException {
-        try (InputStream in = new URL(twitter.showUser(userId).getProfileImageURL().replace("_normal", "")).openStream()) {
+        try (InputStream in = new URL(twitterAPIs.get(0).showUser(userId).getProfileImageURL().replace("_normal", "")).openStream()) {
             File file = new File("C:\\download\\" + userId + ".png");
             FileUtils.copyInputStreamToFile(in, file);
             Thread.sleep(1000);

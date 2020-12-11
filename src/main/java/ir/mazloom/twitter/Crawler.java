@@ -29,29 +29,27 @@ public class Crawler {
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
     private final RelationshipRepository relationshipRepository;
+    private Twitter twitter;
 
     @PostConstruct
     void init() {
+        twitter = getFreeTwitterApi();
         while (true) {
             User user = null;
             try {
-//                user = fetchUserFromDatabase();
-                user = fetchUserFromDatabaseForCrawlingTweet();
+                user = fetchUserFromDatabase();
+//                user = fetchUserFromDatabaseForCrawlingTweet();
                 if (user == null)
                     break;
-//                relationCrawler(user);
-                tweetCrawler(user);
+                relationCrawler(user);
+//                tweetCrawler(user);
             } catch (TwitterException e) {
                 if (e.getErrorMessage() != null && e.getErrorMessage().equals("Rate limit exceeded")) {
-                    log.error("TwitterException please wait(in seconds): " + e.getRateLimitStatus().getSecondsUntilReset());
-                    try {
-                        Thread.sleep(e.getRateLimitStatus().getSecondsUntilReset() * 1000);
-                    } catch (InterruptedException interruptedException) {
-                        interruptedException.printStackTrace();
-                    }
+                    log.error("get new twitter api...");
+                    twitter = getFreeTwitterApi();
                 } else {
-//                    user.setFinish(true);
-                    user.setTweetFinish(true);
+                    user.setFinish(true);
+//                    user.setTweetFinish(true);
                     userRepository.saveAndFlush(user);
                 }
             }
@@ -66,15 +64,21 @@ public class Crawler {
             } catch (TwitterException ignored) {
             }
         }
+        try {
+            log.error("TwitterException please wait 1000 seconds");
+            Thread.sleep(1000 * 1000);
+        } catch (InterruptedException interruptedException) {
+            interruptedException.printStackTrace();
+        }
         return twitterAPIs.get(0);
     }
 
     private User fetchUserFromDatabase() {
-        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByRelationCountAsc();
+        List<User> allBySeedTrueAAndCrawlingTrue = userRepository.findAllBySeedTrueAndCrawlingTrueAndFinishFalseOrderByRelationCountDesc();
         if (allBySeedTrueAAndCrawlingTrue.size() > 0)
             return allBySeedTrueAAndCrawlingTrue.get(0);
         else {
-            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByRelationCountAsc();
+            List<User> allBySeedTrueAAndCrawlingFalse = userRepository.findAllBySeedTrueAndCrawlingFalseAndFinishFalseOrderByRelationCountDesc();
             if (allBySeedTrueAAndCrawlingFalse.size() > 0)
                 return allBySeedTrueAAndCrawlingFalse.get(0);
             /*else {
@@ -116,7 +120,7 @@ public class Crawler {
     private void relationCrawler(User dbUser) throws TwitterException {
         log.info("start crawling user: " + dbUser.getId());
 
-        User updatedUser = persistUser(getFreeTwitterApi().showUser(dbUser.getId()));
+        User updatedUser = persistUser(twitter.showUser(dbUser.getId()));
         updatedUser.setCrawling(true);
         userRepository.saveAndFlush(updatedUser);
 
@@ -156,7 +160,7 @@ public class Crawler {
 
             log.info("start crawling page:" + page);
 
-            userTimeline = getFreeTwitterApi().getUserTimeline(dbUser.getScreenName(), paging);
+            userTimeline = twitter.getUserTimeline(dbUser.getScreenName(), paging);
             userTimeline.forEach(q -> {
                 Tweet tweet = new Tweet();
                 tweet.setId(q.getId());
@@ -213,7 +217,7 @@ public class Crawler {
 
     private void persistFollowers(User user) throws TwitterException {
         while (true) {
-            PagableResponseList<twitter4j.User> followerList = getFreeTwitterApi().getFollowersList(user.getScreenName(), user.getFollowerCursor());
+            PagableResponseList<twitter4j.User> followerList = twitter.getFollowersList(user.getScreenName(), user.getFollowerCursor());
 
             followerList.forEach(follower -> {
                 persistUser(follower);
@@ -240,7 +244,7 @@ public class Crawler {
 
     private void persistFollowings(User user) throws TwitterException {
         while (true) {
-            PagableResponseList<twitter4j.User> followingList = getFreeTwitterApi().getFriendsList(user.getScreenName(), user.getFollowingCursor());
+            PagableResponseList<twitter4j.User> followingList = twitter.getFriendsList(user.getScreenName(), user.getFollowingCursor());
 
             followingList.forEach(following -> {
                 persistUser(following);
@@ -345,16 +349,11 @@ public class Crawler {
                         twitterUser.setScreenName(byScreenName.get().getScreenName());
                         users.add(twitterUser);
                     } else {
-                        twitter4j.User user = getFreeTwitterApi().showUser(screenName);
+                        twitter4j.User user = twitter.showUser(screenName);
                         users.add(user);
                     }
                 } catch (TwitterException e) {
-                    log.error("TwitterException please wait(in seconds): " + e.getRateLimitStatus().getSecondsUntilReset());
-                    try {
-                        Thread.sleep(e.getRateLimitStatus().getSecondsUntilReset() * 1000);
-                    } catch (InterruptedException interruptedException) {
-                        interruptedException.printStackTrace();
-                    }
+                    twitter = getFreeTwitterApi();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
