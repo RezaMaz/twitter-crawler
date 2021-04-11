@@ -1,5 +1,6 @@
 package ir.mazloom.twitter;
 
+import ir.mazloom.twitter.entity.Tweet;
 import ir.mazloom.twitter.entity.User;
 import ir.mazloom.twitter.repository.TweetRepository;
 import ir.mazloom.twitter.repository.UserRepository;
@@ -42,9 +43,9 @@ public class ReportGenerator {
         System.out.println("twitter user report finished.");
     }
 
-    @PostConstruct
-    void twitterTweetReport() {
-        File file = new File("sutfinal.csv");
+    //    @PostConstruct
+    void twitterImageReport() {
+        File file = new File("tweets.csv");
         List<String> strings = null;
         try {
             strings = FileUtils.readLines(file, Charset.defaultCharset());
@@ -52,15 +53,34 @@ public class ReportGenerator {
             e.printStackTrace();
         }
         strings.forEach(x -> {
-            try (InputStream in = new URL(getFreeTwitterApi().showUser(x.split(",")[2].replaceAll("\"","")).getProfileImageURL().replace("_normal", "")).openStream()) {
-                File file1 = new File("C:\\download\\" + x.split(",")[2].replaceAll("\"","") + ".png");
+            try (InputStream in = new URL(getFreeTwitterApi().showUser(x.split(",")[2].replaceAll("\"", "")).getProfileImageURL().replace("_normal", "")).openStream()) {
+                File file1 = new File("C:\\download\\" + x.split(",")[2].replaceAll("\"", "") + ".png");
                 FileUtils.copyInputStreamToFile(in, file1);
             } catch (TwitterException e) {
                 if (((TwitterException) e).getErrorMessage().equals("User not found."))
-                    System.out.println(x.split(",")[2].replaceAll("\"",""));
-            } catch (IOException e){}
+                    System.out.println(x.split(",")[2].replaceAll("\"", ""));
+            } catch (IOException e) {
+            }
         });
 
+    }
+
+    @PostConstruct
+    void twitterTweetReport() throws IOException {
+        File file = new File("tweets.txt");
+        List<Tweet> all = tweetRepository.findAll();
+        for (Tweet tweet : all) {
+            FileUtils.writeStringToFile(file,
+                    tweet.getId() + "\n" +
+                            tweet.getText().replaceAll("\n", " ").replaceAll("\r", " ") + "\n" +
+                            tweet.getCreatedAt() + "\n" +
+                            tweet.getIsRetweeted() + "\n" +
+                            tweet.getRetweetCount() + "\n" +
+                            tweet.getFavoriteCount() + "\n" +
+                            tweet.getUserId() + "\n"
+                    , Charsets.UTF_8, true);
+        }
+        System.out.println("twitter tweets report finished.");
     }
 
     //        @PostConstruct
@@ -97,6 +117,30 @@ public class ReportGenerator {
             interruptedException.printStackTrace();
         }
         return twitterAPIs.get(0);
+    }
+
+    //    @PostConstruct
+    public void writeUsersToDb() throws IOException {
+        File file = new File("userswithouttweet.csv");
+        List<String> strings = FileUtils.readLines(file, Charset.defaultCharset());
+        strings.forEach(q -> {
+            try {
+                twitter4j.User userTweeter = getFreeTwitterApi().showUser(q.split(",")[2]);
+                User user = new User();
+                user.setFinish(false);
+                user.setCrawling(false);
+                user.setPage(0);
+                user.setTweetFinish(false);
+                user.setSeed(true);
+                user.setId(userTweeter.getId());
+                user.setScreenName(userTweeter.getScreenName());
+
+                userRepository.save(user);
+            } catch (TwitterException e) {
+                e.printStackTrace();
+            }
+        });
+        userRepository.flush();
     }
 
 }

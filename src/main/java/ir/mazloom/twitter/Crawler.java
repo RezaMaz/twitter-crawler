@@ -31,25 +31,25 @@ public class Crawler {
     private final RelationshipRepository relationshipRepository;
     private Twitter twitter;
 
-    @PostConstruct
+//    @PostConstruct
     void init() {
         twitter = getFreeTwitterApi();
         while (true) {
             User user = null;
             try {
-                user = fetchUserFromDatabase();
-//                user = fetchUserFromDatabaseForCrawlingTweet();
+//                user = fetchUserFromDatabase();
+                user = fetchUserFromDatabaseForCrawlingTweet();
                 if (user == null)
                     break;
-                relationCrawler(user);
-//                tweetCrawler(user);
+//                relationCrawler(user);
+                tweetCrawler(user);
             } catch (TwitterException e) {
                 if (e.getErrorMessage() != null && e.getErrorMessage().equals("Rate limit exceeded")) {
                     log.error("get new twitter api...");
                     twitter = getFreeTwitterApi();
                 } else {
-                    user.setFinish(true);
-//                    user.setTweetFinish(true);
+//                    user.setFinish(true);
+                    user.setTweetFinish(true);
                     userRepository.saveAndFlush(user);
                 }
             }
@@ -59,9 +59,10 @@ public class Crawler {
     private Twitter getFreeTwitterApi() {
         for (int i = 0; i < twitterAPIs.size(); i++) {
             try {
-                twitterAPIs.get(i).showUser("jzarif");
+                twitterAPIs.get(i).getUserTimeline("jzarif");
                 return twitterAPIs.get(i);
             } catch (TwitterException ignored) {
+                System.out.println();
             }
         }
         try {
